@@ -10,7 +10,7 @@ const server = http.createServer(app); // Create an HTTP server
 
 const io = new Server(server, {
 	cors: {
-		origin: 'http://localhost:5173', // Replace with your frontend URL if deployed
+		origin: 'https://datta-mandir-frontend.onrender.com', // Replace with your frontend URL if deployed
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -19,7 +19,7 @@ const io = new Server(server, {
 // Middleware
 app.use(
 	cors({
-		origin: 'http://localhost:5173', // Allow the frontend URL
+		origin: 'https://datta-mandir-frontend.onrender.com', // Allow the frontend URL
 		credentials: true,
 	})
 );
