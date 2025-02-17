@@ -20,24 +20,6 @@ const DonorPage = () => {
 		return () => clearTimeout(handler);
 	}, [searchTerm]);
 
-	// Function to load donors from localStorage
-	const loadDonorsFromLocalStorage = () => {
-		const cachedDonors = localStorage.getItem('donors');
-		const cachedSearchTerm = localStorage.getItem('searchTerm');
-		const cachedPage = localStorage.getItem('page');
-
-		// Load cached data if search term and page match
-		if (
-			cachedDonors &&
-			cachedSearchTerm === debouncedSearch &&
-			Number(cachedPage) === page
-		) {
-			setDonors(JSON.parse(cachedDonors));
-		} else {
-			fetchDonors();
-		}
-	};
-
 	// Fetch donors from API
 	const fetchDonors = async () => {
 		try {
@@ -46,6 +28,11 @@ const DonorPage = () => {
 					debouncedSearch ? 1 : page
 				}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
 			);
+
+			// Debugging Logs
+			console.log('Fetched Donors:', response.data.donors);
+			console.log('Total Count:', response.data.totalCount);
+
 			setDonors(response.data.donors);
 			setTotalPages(Math.ceil(response.data.totalCount / 10));
 
@@ -60,11 +47,23 @@ const DonorPage = () => {
 
 	// Use localStorage data if available, otherwise fetch from API
 	useEffect(() => {
-		loadDonorsFromLocalStorage();
+		const cachedDonors = localStorage.getItem('donors');
+		const cachedSearchTerm = localStorage.getItem('searchTerm');
+		const cachedPage = localStorage.getItem('page');
+
+		if (
+			cachedDonors &&
+			cachedSearchTerm === debouncedSearch &&
+			Number(cachedPage) === page
+		) {
+			setDonors(JSON.parse(cachedDonors));
+		} else {
+			fetchDonors();
+		}
 
 		// Listen for real-time updates from Socket.IO
 		socket.on('donorDataChanged', () => {
-			// Clear the cache on data changes and fetch fresh data
+			console.log('Real-time update detected. Fetching new data.');
 			localStorage.removeItem('donors');
 			fetchDonors();
 		});
