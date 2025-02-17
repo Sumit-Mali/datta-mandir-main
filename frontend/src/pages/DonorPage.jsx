@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaSearch } from 'react-icons/fa';
 import { io } from 'socket.io-client';
 
+// Connect to the backend server
 const socket = io('https://datta-mandir-backend-7z73.onrender.com');
 
 const DonorPage = () => {
@@ -29,46 +30,53 @@ const DonorPage = () => {
 				}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
 			);
 
-			// Debugging Logs
+			// Log fetched data for debugging
 			console.log('Fetched Donors:', response.data.donors);
-			console.log('Total Count:', response.data.totalCount);
 
+			// Update state with new data
 			setDonors(response.data.donors);
 			setTotalPages(Math.ceil(response.data.totalCount / 10));
 
-			// Cache the data in localStorage
+			// Cache data in localStorage
 			localStorage.setItem('donors', JSON.stringify(response.data.donors));
 			localStorage.setItem('searchTerm', debouncedSearch);
 			localStorage.setItem('page', page);
 		} catch (error) {
-			console.error('Error fetching data:', error);
+			console.error('Error fetching donors:', error);
 		}
 	};
 
-	// Use localStorage data if available, otherwise fetch from API
+	// Load donors from localStorage if available and valid
 	useEffect(() => {
 		const cachedDonors = localStorage.getItem('donors');
 		const cachedSearchTerm = localStorage.getItem('searchTerm');
 		const cachedPage = localStorage.getItem('page');
 
+		// Check if cached data is valid
 		if (
 			cachedDonors &&
 			cachedSearchTerm === debouncedSearch &&
 			Number(cachedPage) === page
 		) {
-			setDonors(JSON.parse(cachedDonors));
+			try {
+				setDonors(JSON.parse(cachedDonors));
+				console.log('Loaded donors from localStorage');
+			} catch (error) {
+				console.error('Error parsing cached donors:', error);
+				fetchDonors(); // Fallback to fetching if cache is corrupted
+			}
 		} else {
-			fetchDonors();
+			fetchDonors(); // Fetch fresh data if cache is missing or invalid
 		}
 
-		// Listen for real-time updates from Socket.IO
+		// Listen for real-time updates
 		socket.on('donorDataChanged', () => {
 			console.log('Real-time update detected. Fetching new data.');
-			localStorage.removeItem('donors');
-			fetchDonors();
+			localStorage.removeItem('donors'); // Clear outdated cache
+			fetchDonors(); // Fetch fresh data
 		});
 
-		// Cleanup listener on component unmount
+		// Cleanup socket listener on component unmount
 		return () => socket.off('donorDataChanged');
 	}, [page, debouncedSearch]);
 
