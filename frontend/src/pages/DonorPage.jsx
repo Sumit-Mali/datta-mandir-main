@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FaSearch } from 'react-icons/fa';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3001');
+const socket = io('https://datta-mandir-backend-7z73.onrender.com');
 
 const DonorPage = () => {
 	const [donors, setDonors] = useState([]);
@@ -42,7 +42,7 @@ const DonorPage = () => {
 	const fetchDonors = async () => {
 		try {
 			const response = await axios.get(
-				`http://localhost:3001/getDonors?page=${
+				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${
 					debouncedSearch ? 1 : page
 				}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
 			);
