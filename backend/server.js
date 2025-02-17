@@ -30,8 +30,6 @@ const mongoURI =
 	'mongodb+srv://sumitmali2002:Skms121524@cluster0.fd7sc.mongodb.net/donordb?retryWrites=true&w=majority&appName=Cluster0';
 mongoose
 	.connect(mongoURI, {
-		useNewUrlParser: true,
-		useUnifiedTopology: true,
 		serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
 	})
 	.then(() => {
