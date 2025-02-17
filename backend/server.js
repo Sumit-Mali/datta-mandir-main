@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
 	cors: {
-		origin: 'https://shree-datta-mandir-kurli.onrender.com', // Replace with your frontend URL if deployed
+		origin: 'https://shree-datta-mandir-kurli.onrender.com',
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -19,7 +19,7 @@ const io = new Server(server, {
 // Middleware
 app.use(
 	cors({
-		origin: 'https://shree-datta-mandir-kurli.onrender.com', // Allow the frontend URL
+		origin: 'https://shree-datta-mandir-kurli.onrender.com',
 		credentials: true,
 	})
 );
@@ -29,33 +29,22 @@ app.use(express.json());
 const mongoURI =
 	'mongodb+srv://sumitmali2002:Skms121524@cluster0.fd7sc.mongodb.net/donordb?retryWrites=true&w=majority&appName=Cluster0';
 mongoose
-	.connect(mongoURI, {
-		serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-	})
+	.connect(mongoURI, { serverSelectionTimeoutMS: 5000 })
 	.then(() => {
 		console.log('MongoDB connected');
 
-		// MongoDB Change Stream: Listen for changes in the donors collection
+		// MongoDB Change Stream: Listen for changes
 		const donorChangeStream = DonorModel.watch();
-
-		// Debouncing the real-time update emissions
 		let debounceTimer;
-		donorChangeStream.on('change', (change) => {
-			console.log('Change detected:', change);
 
-			// Debounce emitting the event
+		donorChangeStream.on('change', async () => {
 			clearTimeout(debounceTimer);
-			debounceTimer = setTimeout(() => {
-				io.emit('donorDataChanged', { message: 'Donor data updated' });
-			}, 500);
-		});
-
-		// Handle change stream errors and closures
-		donorChangeStream.on('error', (error) => {
-			console.error('Change stream error:', error);
-		});
-		donorChangeStream.on('close', () => {
-			console.warn('Change stream closed');
+			debounceTimer = setTimeout(async () => {
+				const updatedDonors = await DonorModel.find({})
+					.select('name amount village photo_url')
+					.lean();
+				io.emit('donorDataChanged', updatedDonors);
+			}, 2000); // Increased debounce to 2 seconds
 		});
 	})
 	.catch((err) => console.error('MongoDB connection error:', err));
@@ -68,20 +57,15 @@ app.get('/getDonors', async (req, res) => {
 
 	try {
 		const query = search
-			? { name: { $regex: search, $options: 'i' } } // Case-insensitive search
+			? { name: { $regex: search, $options: 'i' } }
 			: {};
 
-		const totalCountPromise = DonorModel.countDocuments(query);
-		const donorsPromise = DonorModel.find(query)
+		const totalCount = await DonorModel.countDocuments(query);
+		const donors = await DonorModel.find(query)
 			.skip((pageNumber - 1) * limitNumber)
 			.limit(limitNumber)
 			.select('name amount village photo_url')
 			.lean();
-
-		const [totalCount, donors] = await Promise.all([
-			totalCountPromise,
-			donorsPromise,
-		]);
 
 		res.json({ donors, totalCount });
 	} catch (error) {
@@ -89,16 +73,10 @@ app.get('/getDonors', async (req, res) => {
 	}
 });
 
-// Handle Socket.IO connections
 io.on('connection', (socket) => {
 	console.log('Client connected');
-
-	// Handle client disconnection
-	socket.on('disconnect', () => {
-		console.log('Client disconnected');
-	});
+	socket.on('disconnect', () => console.log('Client disconnected'));
 });
 
-// Start server
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => console.log(`Server running on port: ${PORT}`));
