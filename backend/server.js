@@ -2,11 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const DonorModel = require('./models/DonorModel');
-const http = require('http'); // For creating the server
-const { Server } = require('socket.io'); // Socket.IO for real-time updates
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
-const server = http.createServer(app); // Create an HTTP server
+const server = http.createServer(app);
 
 const io = new Server(server, {
 	cors: {
@@ -29,18 +29,35 @@ app.use(express.json());
 const mongoURI =
 	'mongodb+srv://sumitmali2002:Skms121524@cluster0.fd7sc.mongodb.net/donordb?retryWrites=true&w=majority&appName=Cluster0';
 mongoose
-	.connect(mongoURI)
+	.connect(mongoURI, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+		serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+	})
 	.then(() => {
 		console.log('MongoDB connected');
 
 		// MongoDB Change Stream: Listen for changes in the donors collection
 		const donorChangeStream = DonorModel.watch();
 
+		// Debouncing the real-time update emissions
+		let debounceTimer;
 		donorChangeStream.on('change', (change) => {
 			console.log('Change detected:', change);
 
-			// Emit change to all connected clients
-			io.emit('donorDataChanged', { message: 'Donor data updated' });
+			// Debounce emitting the event
+			clearTimeout(debounceTimer);
+			debounceTimer = setTimeout(() => {
+				io.emit('donorDataChanged', { message: 'Donor data updated' });
+			}, 500);
+		});
+
+		// Handle change stream errors and closures
+		donorChangeStream.on('error', (error) => {
+			console.error('Change stream error:', error);
+		});
+		donorChangeStream.on('close', () => {
+			console.warn('Change stream closed');
 		});
 	})
 	.catch((err) => console.error('MongoDB connection error:', err));
@@ -72,6 +89,16 @@ app.get('/getDonors', async (req, res) => {
 	} catch (error) {
 		res.status(500).send('Server Error');
 	}
+});
+
+// Handle Socket.IO connections
+io.on('connection', (socket) => {
+	console.log('Client connected');
+
+	// Handle client disconnection
+	socket.on('disconnect', () => {
+		console.log('Client disconnected');
+	});
 });
 
 // Start server
