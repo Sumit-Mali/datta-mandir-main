@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaSearch } from 'react-icons/fa';
-import { io } from 'socket.io-client'; // Import Socket.IO client
+import { io } from 'socket.io-client';
 
-const socket = io('https://datta-mandir-backend-7z73.onrender.com'); // Replace with your backend URL if deployed
+const socket = io('http://localhost:3001');
 
 const DonorPage = () => {
 	const [donors, setDonors] = useState([]);
@@ -16,36 +16,62 @@ const DonorPage = () => {
 	useEffect(() => {
 		const handler = setTimeout(() => {
 			setDebouncedSearch(searchTerm);
-		}, 500); // Wait 500ms before updating debounced search
-
-		return () => clearTimeout(handler); // Cleanup timeout on re-render
+		}, 500);
+		return () => clearTimeout(handler);
 	}, [searchTerm]);
 
-	// Fetch donors
+	// Function to load donors from localStorage
+	const loadDonorsFromLocalStorage = () => {
+		const cachedDonors = localStorage.getItem('donors');
+		const cachedSearchTerm = localStorage.getItem('searchTerm');
+		const cachedPage = localStorage.getItem('page');
+
+		// Load cached data if search term and page match
+		if (
+			cachedDonors &&
+			cachedSearchTerm === debouncedSearch &&
+			Number(cachedPage) === page
+		) {
+			setDonors(JSON.parse(cachedDonors));
+		} else {
+			fetchDonors();
+		}
+	};
+
+	// Fetch donors from API
+	const fetchDonors = async () => {
+		try {
+			const response = await axios.get(
+				`http://localhost:3001/getDonors?page=${
+					debouncedSearch ? 1 : page
+				}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
+			);
+			setDonors(response.data.donors);
+			setTotalPages(Math.ceil(response.data.totalCount / 10));
+
+			// Cache the data in localStorage
+			localStorage.setItem('donors', JSON.stringify(response.data.donors));
+			localStorage.setItem('searchTerm', debouncedSearch);
+			localStorage.setItem('page', page);
+		} catch (error) {
+			console.error('Error fetching data:', error);
+		}
+	};
+
+	// Use localStorage data if available, otherwise fetch from API
 	useEffect(() => {
-		const fetchDonors = async () => {
-			try {
-				// Replace with your backend URL if deployed
-				const response = await axios.get(
-					`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${
-						debouncedSearch ? 1 : page
-					}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
-				);
-				setDonors(response.data.donors);
-				setTotalPages(Math.ceil(response.data.totalCount / 10));
-			} catch (error) {
-				console.error('Error fetching data:', error);
-			}
-		};
+		loadDonorsFromLocalStorage();
 
-		fetchDonors();
+		// Listen for real-time updates from Socket.IO
+		socket.on('donorDataChanged', () => {
+			// Clear the cache on data changes and fetch fresh data
+			localStorage.removeItem('donors');
+			fetchDonors();
+		});
 
-		// Listen for real-time updates from the backend
-		socket.on('donorDataChanged', fetchDonors);
-
-		// Cleanup: Remove the event listener when the component is unmounted
-		return () => socket.off('donorDataChanged', fetchDonors);
-	}, [page, debouncedSearch]); // Fetch new data when page or search term changes
+		// Cleanup listener on component unmount
+		return () => socket.off('donorDataChanged');
+	}, [page, debouncedSearch]);
 
 	return (
 		<div className="p-4">
