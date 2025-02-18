@@ -10,7 +10,10 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
 	cors: {
-		origin: 'https://shree-datta-mandir-kurli.onrender.com',
+		origin: [
+			'https://shree-datta-mandir-kurli.onrender.com',  // Frontend Url
+			'http://localhost:5173', // Added for local testing
+		],
 		methods: ['GET', 'POST'],
 		credentials: true,
 	},
@@ -19,7 +22,10 @@ const io = new Server(server, {
 // Middleware
 app.use(
 	cors({
-		origin: 'https://shree-datta-mandir-kurli.onrender.com',
+		origin: [
+			'https://shree-datta-mandir-kurli.onrender.com',   // Frontend Url
+			'http://localhost:5173', // Added for local testing
+		],
 		credentials: true,
 	})
 );
@@ -43,11 +49,16 @@ mongoose
 				const updatedDonors = await DonorModel.find({})
 					.select('name amount village photo_url')
 					.lean();
-				io.emit('donorDataChanged', updatedDonors);
+				io.emit('donorDataChanged', updatedDonors); // Emit updated donors to all clients
 			}, 2000); // Increased debounce to 2 seconds
 		});
 	})
 	.catch((err) => console.error('MongoDB connection error:', err));
+
+// Handle MongoDB connection errors
+mongoose.connection.on('error', (err) => {
+	console.error('MongoDB connection error:', err);
+});
 
 // Route for donors pagination
 app.get('/getDonors', async (req, res) => {
