@@ -165,6 +165,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaSearch } from 'react-icons/fa';
+import { io } from 'socket.io-client'; // Import Socket.IO client
+
+const socket = io('https://datta-mandir-backend-7z73.onrender.com'); // Use your backend URL if necessary
 
 const DonorPage = () => {
 	const [donors, setDonors] = useState([]);
@@ -172,39 +175,52 @@ const DonorPage = () => {
 	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
-	const [loading, setLoading] = useState(false);
 
 	// Debounce search input
 	useEffect(() => {
 		const handler = setTimeout(() => {
 			setDebouncedSearch(searchTerm);
-		}, 500);
-		return () => clearTimeout(handler);
+		}, 500); // Wait 500ms before updating debounced search
+
+		return () => clearTimeout(handler); // Cleanup timeout on re-render
 	}, [searchTerm]);
 
-	// Fetch donors
+	// Fetch donors from backend
 	const fetchDonors = async () => {
-		setLoading(true);
 		try {
 			const response = await axios.get(
-				`http://localhost:3001/getDonors?page=${debouncedSearch ? 1 : page
-				}&limit=10&search=${debouncedSearch}`
+				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${
+					debouncedSearch ? 1 : page
+				}&limit=10&search=${debouncedSearch}&t=${Date.now()}`
 			);
 			setDonors(response.data.donors);
 			setTotalPages(Math.ceil(response.data.totalCount / 10));
 		} catch (error) {
 			console.error('Error fetching data:', error);
-		} finally {
-			setLoading(false);
 		}
 	};
 
-	// Polling to refresh data every 5 seconds
 	useEffect(() => {
 		fetchDonors();
-		const pollingInterval = setInterval(fetchDonors, 5000); // Poll every 5 seconds
-		return () => clearInterval(pollingInterval); // Cleanup interval on unmount
-	}, [debouncedSearch, page]);
+
+		// Listen for real-time updates from the backend
+		socket.on('donorDataChanged', (updatedDonors) => {
+			setDonors(updatedDonors); // Update donor list with real-time data
+		});
+
+		// Cleanup: Remove the event listener when the component is unmounted
+		return () => socket.off('donorDataChanged');
+	}, [page, debouncedSearch]);
+
+	// Optional polling if socket connection is lost
+	useEffect(() => {
+		let pollingInterval;
+		if (!socket.connected) {
+			pollingInterval = setInterval(fetchDonors, 5000); // Poll every 5 seconds
+		}
+
+		return () => clearInterval(pollingInterval); // Cleanup on unmount
+	}, [socket.connected]);
 
 	return (
 		<div className="p-4">
@@ -225,46 +241,39 @@ const DonorPage = () => {
 				/>
 			</div>
 
-			{/* Donor List */}
-			{loading ? (
-				<p className="text-center">Loading donors...</p>
-			) : (
-				<div className="grid grid-cols-1 md:grid-cols-4 place-items-center gap-2 md:gap-4">
-					{donors.length > 0 ? (
-						donors.map((donor) => (
-							<div
-								key={donor._id}
-								className="w-80 border rounded-lg p-2 shadow-lg bg-[#F4EEDC]"
-							>
-								<div className="w-full h-40 flex items-center justify-center bg-gray-100">
-									<img
-										src={donor.photo_url}
-										alt={donor.name}
-										className="max-w-full max-h-full object-contain"
-									/>
-								</div>
-								<div className="p-2">
-									<h4 className="text-md font-bold">
-										{donor.name}
-									</h4>
-									<p className="text-gray-600">
-										{donor.village}
-									</p>
-									<h4 className="text-md text-gray-800 font-semibold">
-										₹ {donor.amount}
-									</h4>
-								</div>
+			{/* Donor Cards */}
+			<div className="grid grid-cols-1 md:grid-cols-4 place-items-center gap-2 md:gap-4">
+				{donors.length > 0 ? (
+					donors.map((donor) => (
+						<div
+							key={donor._id}
+							className="w-80 border rounded-lg p-2 shadow-lg bg-[#F4EEDC]">
+							<div className="w-full h-40 flex items-center justify-center bg-gray-100">
+								<img
+									src={donor.photo_url}
+									alt={donor.name}
+									className="max-w-full max-h-full object-contain"
+								/>
 							</div>
-						))
-					) : (
-						<p className="col-span-4 text-gray-600">
-							देणगीदाराचे नाव अस्तित्वात नाही
-						</p>
-					)}
-				</div>
-			)}
+							<div className="p-2">
+								<h4 className="text-md font-bold">
+									{donor.name}
+								</h4>
+								<p className="text-gray-600">{donor.village}</p>
+								<h4 className="text-md text-gray-800 font-semibold">
+									₹ {donor.amount}
+								</h4>
+							</div>
+						</div>
+					))
+				) : (
+					<p className="col-span-4 text-gray-600">
+						देणगीदाराचे नाव अस्तित्वात नाही
+					</p>
+				)}
+			</div>
 
-			{/* Pagination */}
+			{/* Pagination Buttons */}
 			{!searchTerm && (
 				<div className="flex justify-center w-full mt-4">
 					<button
@@ -274,8 +283,7 @@ const DonorPage = () => {
 							page === 1
 								? 'bg-gray-300'
 								: 'bg-blue-500 text-white'
-						}`}
-					>
+						}`}>
 						Previous
 					</button>
 					<button
@@ -285,8 +293,7 @@ const DonorPage = () => {
 							page >= totalPages
 								? 'bg-gray-300'
 								: 'bg-blue-500 text-white'
-						}`}
-					>
+						}`}>
 						Next
 					</button>
 				</div>
@@ -296,5 +303,6 @@ const DonorPage = () => {
 };
 
 export default DonorPage;
+
 
 
