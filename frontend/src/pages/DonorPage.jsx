@@ -11,6 +11,7 @@ const DonorPage = () => {
 	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
+	const [loading, setLoading] = useState(false);
 	const cachedData = useRef({});
 
 	// Debounce the search term to limit API calls
@@ -31,9 +32,10 @@ const DonorPage = () => {
 			return;
 		}
 
+		setLoading(true); // Show loading indicator
 		try {
 			const response = await axios.get(
-				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${queryPage}&limit=10&search=${querySearch}&t=${Date.now()}`
+				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${queryPage}&limit=10&search=${querySearch}`
 			);
 			const { donors, totalCount } = response.data;
 			setDonors(donors);
@@ -41,13 +43,15 @@ const DonorPage = () => {
 			cachedData.current[cacheKey] = { donors, totalPages: Math.ceil(totalCount / 10) };
 		} catch (error) {
 			console.error('Error fetching data:', error);
+		} finally {
+			setLoading(false); // Hide loading indicator
 		}
 	};
 
 	// Fetch donors on page or search change
 	useEffect(() => {
 		fetchDonors();
-		socket.on('donorDataChanged', fetchDonors);
+		socket.on('donorDataChanged', () => fetchDonors(page, debouncedSearch)); // Update current page with the latest data
 		return () => socket.off('donorDataChanged', fetchDonors);
 	}, [page, debouncedSearch]);
 
@@ -67,29 +71,43 @@ const DonorPage = () => {
 					className="w-2xl p-2 pl-7 md:pl-10 border rounded-4xl shadow-sm"
 				/>
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-4 place-items-center gap-2 md:gap-4">
-				{donors.length > 0 ? (
-					donors.map((donor) => (
-						<div key={donor._id} className="w-80 border rounded-lg p-2 shadow-lg bg-[#F4EEDC]">
-							<div className="w-full h-40 flex items-center justify-center bg-gray-100">
-								<img src={donor.photo_url} alt={donor.name} className="max-w-full max-h-full object-contain" />
+
+			{loading ? (
+				<div className="flex justify-center items-center h-40">
+					<div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+				</div>
+			) : (
+				<div className="grid grid-cols-1 md:grid-cols-4 place-items-center gap-2 md:gap-4">
+					{donors.length > 0 ? (
+						donors.map((donor) => (
+							<div key={donor._id} className="w-80 border rounded-lg p-2 shadow-lg bg-[#F4EEDC]">
+								<div className="w-full h-40 flex items-center justify-center bg-gray-100">
+									<img
+										src={donor.photo_url}
+										alt={donor.name}
+										className="max-w-full max-h-full object-contain"
+									/>
+								</div>
+								<div className="p-2">
+									<h4 className="text-md font-bold">{donor.name}</h4>
+									<p className="text-gray-600">{donor.village}</p>
+									<h4 className="text-md text-gray-800 font-semibold">₹ {donor.amount}</h4>
+								</div>
 							</div>
-							<div className="p-2">
-								<h4 className="text-md font-bold">{donor.name}</h4>
-								<p className="text-gray-600">{donor.village}</p>
-								<h4 className="text-md text-gray-800 font-semibold">₹ {donor.amount}</h4>
-							</div>
-						</div>
-					))
-				) : (
-					<p className="col-span-4 text-gray-600">देणगीदाराचे नाव अस्तित्वात नाही</p>
-				)}
-			</div>
+						))
+					) : (
+						<p className="col-span-4 text-gray-600">देणगीदाराचे नाव अस्तित्वात नाही</p>
+					)}
+				</div>
+			)}
+
 			<div className="flex justify-center w-full mt-4">
 				<button
 					onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
 					disabled={page === 1}
-					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg mr-2 cursor-pointer ${page === 1 ? 'bg-gray-300' : 'bg-blue-500 text-white'}`}
+					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg mr-2 cursor-pointer ${
+						page === 1 ? 'bg-gray-300' : 'bg-blue-500 text-white'
+					}`}
 				>
 					Previous
 				</button>
@@ -97,7 +115,9 @@ const DonorPage = () => {
 				<button
 					onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
 					disabled={page >= totalPages}
-					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg  cursor-pointer ${page >= totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white'}`}
+					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer ${
+						page >= totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white'
+					}`}
 				>
 					Next
 				</button>
@@ -107,7 +127,3 @@ const DonorPage = () => {
 };
 
 export default DonorPage;
-
-
-
-
