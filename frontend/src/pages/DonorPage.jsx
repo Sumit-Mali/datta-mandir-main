@@ -85,7 +85,8 @@ const DonorPage = () => {
 									<img
 										src={donor.photo_url}
 										alt={donor.name}
-										className="max-w-full max-h-full object-contain"
+										className="max-w-full max-h-full object-cover"
+										loading="lazy"
 									/>
 								</div>
 								<div className="p-2">
