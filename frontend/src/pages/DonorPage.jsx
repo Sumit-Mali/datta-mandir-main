@@ -81,11 +81,11 @@ const DonorPage = () => {
 					{donors.length > 0 ? (
 						donors.map((donor) => (
 							<div key={donor._id} className="w-80 border rounded-lg p-2 shadow-lg bg-[#F4EEDC]">
-								<div className="w-full h-40 flex items-center justify-center bg-gray-100 object-fill">
+								<div className="w-full h-40 flex items-center justify-center bg-gray-100">
 									<img
 										src={donor.photo_url}
 										alt={donor.name}
-										className="max-w-full max-h-full object-fill"
+										className="max-w-full max-h-full object-contain"
 										loading="lazy"
 									/>
 								</div>
