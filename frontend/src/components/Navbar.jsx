@@ -28,7 +28,7 @@ const Navbar = () => {
 				<NavLink
 					to="/"
 					className={({ isActive }) =>
-						`text-sm sm:text-lg font-bold relative ${
+						`text-base sm:text-lg font-bold relative ${
 							isActive ? 'text-blue-800' : ''
 						}`
 					}>
@@ -38,7 +38,7 @@ const Navbar = () => {
 				<NavLink
 					to="/constructionestimate"
 					className={({ isActive }) =>
-						`text-sm sm:text-lg font-bold relative ${
+						`text-base sm:text-lg font-bold relative ${
 							isActive ? 'text-blue-800' : ''
 						}`
 					}>
@@ -47,7 +47,7 @@ const Navbar = () => {
 				<NavLink
 					to="/donor"
 					className={({ isActive }) =>
-						`text-sm sm:text-lg font-bold relative ${
+						`text-base sm:text-lg font-bold relative ${
 							isActive ? 'text-blue-800' : ''
 						}`
 					}>
