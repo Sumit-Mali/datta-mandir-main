@@ -35,12 +35,12 @@ const DonorPage = () => {
 		setLoading(true); // Show loading indicator
 		try {
 			const response = await axios.get(
-				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${queryPage}&limit=10&search=${querySearch}`
+				`https://datta-mandir-backend-7z73.onrender.com/getDonors?page=${queryPage}&limit=12&search=${querySearch}`
 			);
 			const { donors, totalCount } = response.data;
 			setDonors(donors);
-			setTotalPages(Math.ceil(totalCount / 10));
-			cachedData.current[cacheKey] = { donors, totalPages: Math.ceil(totalCount / 10) };
+			setTotalPages(Math.ceil(totalCount / 12));
+			cachedData.current[cacheKey] = { donors, totalPages: Math.ceil(totalCount / 12) };
 		} catch (error) {
 			console.error('Error fetching data:', error);
 		} finally {
