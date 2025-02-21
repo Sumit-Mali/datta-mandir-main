@@ -62,9 +62,9 @@ mongoose.connection.on('error', (err) => {
 
 // Route for donors pagination
 app.get('/getDonors', async (req, res) => {
-	const { page = 1, limit = 10, search = '' } = req.query;
-	const pageNumber = parseInt(page, 10);
-	const limitNumber = parseInt(limit, 10);
+	const { page = 1, limit = 12, search = '' } = req.query;
+	const pageNumber = parseInt(page, 12);
+	const limitNumber = parseInt(limit, 12);
 
 	try {
 		const query = search
