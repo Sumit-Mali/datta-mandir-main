@@ -119,7 +119,7 @@ const HistoryPage = () => {
 			<div className="flex flex-col justify-center md:justify-end mb-4 md:mb-0 gap-8 ">
 				<figure>
 					<img
-						className="w-64 h-64 md:w-108 md:h-108 shadow-lg border-4 border-blue-800"
+						className="w-88 h-102 md:w-108 md:h-108 shadow-lg border-4 border-blue-800"
 						src={OldDattaMandirImage}
 						alt="Old Datta Mandir Image"
 					/>
@@ -130,7 +130,7 @@ const HistoryPage = () => {
 
 				<figure>
 					<img
-						className="w-64 h-64 md:w-108 md:h-108 shadow-lg border-4 border-blue-800"
+						className="w-88 h-102 md:w-108 md:h-108 shadow-lg border-4 border-blue-800"
 						src={OldDattaMandirShikharImage}
 						alt="Old Datta Mandir Shikhar Image"
 					/>
