@@ -105,8 +105,6 @@ app.get('/getDonors', async (req, res) => {
             .select('name amount village photo_url')
             .lean();
 
-        console.log(`Page: ${pageNumber}, Skip: ${skip}, Limit: ${limitNumber}, Total Count: ${totalCount}, Returned: ${donors.length}`);
-
         res.json({ donors, totalCount });
     } catch (error) {
         console.error('Error fetching donors:', error);
