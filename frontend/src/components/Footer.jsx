@@ -46,7 +46,7 @@ const Footer = () => {
 			</div>
 
 			<div className="p-2 mt-2 text-center font-bold">
-				Designed By Sumit Maruti Mali
+				Developed By Sumit Maruti Mali
 			</div>
 		</>
 	);
