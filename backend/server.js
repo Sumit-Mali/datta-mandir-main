@@ -61,28 +61,59 @@ mongoose.connection.on('error', (err) => {
 });
 
 // Route for donors pagination
+// app.get('/getDonors', async (req, res) => {
+// 	const { page = 1, limit = 12, search = '' } = req.query;
+// 	const pageNumber = parseInt(page, 10);
+// 	const limitNumber = parseInt(limit, 10);
+
+// 	try {
+// 		const query = search
+// 			? { name: { $regex: search, $options: 'i' } }
+// 			: {};
+
+// 		const totalCount = await DonorModel.countDocuments(query);
+// 		const donors = await DonorModel.find(query)
+// 			.skip((pageNumber - 1) * limitNumber)
+// 			.limit(limitNumber)
+// 			.select('name amount village photo_url')
+// 			.lean();
+
+// 		res.json({ donors, totalCount });
+// 	} catch (error) {
+// 		res.status(500).send('Server Error');
+// 	}
+// });
+
 app.get('/getDonors', async (req, res) => {
-	const { page = 1, limit = 12, search = '' } = req.query;
-	const pageNumber = parseInt(page, 12);
-	const limitNumber = parseInt(limit, 12);
+    const { page = 1, limit = 12, search = '' } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    
+    try {
+        const query = search
+            ? { name: { $regex: search, $options: 'i' } }
+            : {};
 
-	try {
-		const query = search
-			? { name: { $regex: search, $options: 'i' } }
-			: {};
+        // Get total donor count
+        const totalCount = await DonorModel.countDocuments(query).exec();
 
-		const totalCount = await DonorModel.countDocuments(query);
-		const donors = await DonorModel.find(query)
-			.skip((pageNumber - 1) * limitNumber)
-			.limit(limitNumber)
-			.select('name amount village photo_url')
-			.lean();
+        // Skip & limit logic for pagination
+        const skip = (pageNumber - 1) * limitNumber;
+        const donors = await DonorModel.find(query)
+            .skip(skip)
+            .limit(limitNumber)
+            .select('name amount village photo_url')
+            .lean();
 
-		res.json({ donors, totalCount });
-	} catch (error) {
-		res.status(500).send('Server Error');
-	}
+        console.log(`Page: ${pageNumber}, Skip: ${skip}, Limit: ${limitNumber}, Total Count: ${totalCount}, Returned: ${donors.length}`);
+
+        res.json({ donors, totalCount });
+    } catch (error) {
+        console.error('Error fetching donors:', error);
+        res.status(500).send('Server Error');
+    }
 });
+
 
 io.on('connection', (socket) => {
 	console.log('Client connected');
