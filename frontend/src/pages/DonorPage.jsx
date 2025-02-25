@@ -104,7 +104,9 @@ const DonorPage = () => {
 
 			<div className="flex justify-center w-full mt-4">
 				<button
-					onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+					onClick={() => {setPage((prev) => Math.max(prev - 1, 1));
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+					}}
 					disabled={page === 1}
 					window.scrollTo({ top: 0, behavior: 'smooth' })
 					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg mr-2 cursor-pointer ${
@@ -115,9 +117,11 @@ const DonorPage = () => {
 				</button>
 				<span className="px-4 py-2">{`Page ${page} of ${totalPages}`}</span>
 				<button
-					onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+					onClick={() => {setPage((prev) => Math.min(prev + 1, totalPages));
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+					}}
 					disabled={page >= totalPages}
-					window.scrollTo({ top: 0, behavior: 'smooth' })
+					
 					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer ${
 						page >= totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white'
 					}`}
