@@ -106,6 +106,7 @@ const DonorPage = () => {
 				<button
 					onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
 					disabled={page === 1}
+					window.scrollTo({ top: 0, behavior: 'smooth' })
 					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg mr-2 cursor-pointer ${
 						page === 1 ? 'bg-gray-300' : 'bg-blue-500 text-white'
 					}`}
@@ -116,6 +117,7 @@ const DonorPage = () => {
 				<button
 					onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
 					disabled={page >= totalPages}
+					window.scrollTo({ top: 0, behavior: 'smooth' })
 					className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer ${
 						page >= totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white'
 					}`}
