@@ -29,7 +29,7 @@ const Navbar = () => {
 					to="/"
 					className={({ isActive }) =>
 						`text-base sm:text-lg font-bold relative ${
-							isActive ? 'text-white bg-blue-500 p-1 rounded-2xl' : ''
+							isActive ? 'text-white bg-blue-500 p-1.5 rounded-2xl' : ''
 						}`
 					}>
 					इतिहास
@@ -39,7 +39,7 @@ const Navbar = () => {
 					to="/constructionestimate"
 					className={({ isActive }) =>
 						`text-base sm:text-lg font-bold relative ${
-							isActive ? 'text-white bg-blue-500 p-1 rounded-2xl' : ''
+							isActive ? 'text-white bg-blue-500 p-1.5 rounded-2xl' : ''
 						}`
 					}>
 					बांधकाम एस्टीमेट
@@ -48,7 +48,7 @@ const Navbar = () => {
 					to="/donor"
 					className={({ isActive }) =>
 						`text-base sm:text-lg font-bold relative ${
-							isActive ? 'text-white bg-blue-500 p-1 rounded-2xl' : ''
+							isActive ? 'text-white bg-blue-500 p-1.5 rounded-2xl' : ''
 						}`
 					}>
 					देणगीदारांची नावे
